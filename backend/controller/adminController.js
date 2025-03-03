@@ -51,7 +51,8 @@ console.log({ name, email, password, speciality, degree, experience, about, fees
       experience,
       about,
       fees,
-      address: JSON.parse(address), 
+      address: typeof address === "string" ? JSON.parse(address) : address, 
+      available: true,  // Ensure this is always included
       date: Date.now(),
     };
 
@@ -109,4 +110,4 @@ const allDoctors = async (req,res) => {
   }
 }
 
-export { addDoctor,loginAdmin }
+export { addDoctor,loginAdmin,allDoctors }

@@ -43,8 +43,17 @@ const AddDoctor = () => {
         console.log(`${key} : ${value}`); 
       })
 
-      const {data} = await axios.post(backendUrl + '/api/admin/add-doctor',formData,{headers: {aToken} })
-
+      try {
+        const response = await axios.post(
+            `${backendUrl}/api/admin/add-doctor`,
+            formData,
+            { headers: { Authorization: `Bearer ${aToken}` } }
+        );
+        console.log(response.data);
+    } catch (error) {
+        console.error("Error:", error.response?.data || error.message);
+    }
+    
       if (data.success) {
         toast.success("Doctor added successfully");
         // Reset the form fields after submission
