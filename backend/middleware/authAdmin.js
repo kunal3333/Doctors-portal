@@ -1,30 +1,33 @@
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 
-const authAdmin = async (req, res, next) => {
+const authAdmin = (req, res, next) => {
   try {
-    const atoken = req.headers['authorization'];
-
-    if (!atoken) {
-      return res.status(401).json({ success: false, message: 'Token missing. Please login again.' });
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.error("No token provided");
+      return res.status(401).json({ success: false, message: "Unauthorized: No token provided" });
     }
 
-    const token = atoken.startsWith('Bearer ') ? atoken.slice(7) : atoken;
+    const token = authHeader.split(" ")[1]; // Extract token after "Bearer "
 
-    try {
-      var token_decode = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (error) {
-      return res.status(401).json({ success: false, message: 'Token expired or invalid. Please login again.' });
+    if (!token) {
+      console.error("Invalid token format");
+      return res.status(401).json({ success: false, message: "Unauthorized: Invalid token format" });
     }
 
-    if (!token_decode.email || token_decode.email !== process.env.ADMIN_EMAIL) {
-      return res.status(401).json({ success: false, message: 'Unauthorized access.' });
-    }
-
-    req.admin = token_decode;
-    next();
+    // Verify Token
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        console.error("JWT Verification Failed:", err.message);
+        return res.status(401).json({ success: false, message: "Unauthorized: Invalid token" });
+      }
+      req.admin = decoded;
+      next();
+    });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error("JWT Error:", error);
+    return res.status(401).json({ success: false, message: "Unauthorized: Invalid token" });
   }
 };
 

@@ -4,7 +4,8 @@ import { toast } from 'react-toastify';
 import { assets } from "../../assets/assets";
 import axios from 'axios'
 const AddDoctor = () => {
-  const [docImg, setDocImg] = useState(null);
+
+  const [docImg, setDocImg] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,68 +20,68 @@ const AddDoctor = () => {
   const { backendUrl, aToken } = useContext(AdminContext);
 
   const onSubmitHandler = async (event) => {
-    event.preventDefault();
+    event.preventDefault()
+
+    console.log("Token being sent:", aToken); // ✅ Debugging step
+
 
     try {
-      if (!docImg) {
-        return toast.error('Image Not selected');
-      }
+        if (!docImg) {
+            return toast.error('Image Not selected');
+        }
 
-      const formData = new FormData();
-      formData.append('docImg', docImg);
-      formData.append('name', name);
-      formData.append('email', email);
-      formData.append('password', password);
-      formData.append('experience', experience);
-      formData.append('fees', fees);
-      formData.append('about', about);
-      formData.append('speciality', speciality);
-      formData.append('degree', degree);
-      formData.append('address1', address1);
-      formData.append('address2', address2);
-
-      formData.forEach((value,key) =>{
-        console.log(`${key} : ${value}`); 
-      })
-
-      try {
-        const response = await axios.post(
-            `${backendUrl}/api/admin/add-doctor`,
-            formData,
-            { headers: { Authorization: `Bearer ${aToken}` } }
+        const formData = new FormData();
+        formData.append('docImg', docImg);
+        formData.append('name', name);
+        formData.append('email', email);
+        formData.append('password', password);
+        formData.append('experience', experience);
+        formData.append('fees', fees);
+        formData.append('about', about);
+        formData.append('speciality', speciality);
+        formData.append('degree', degree);
+        formData.append('address', JSON.stringify({ line1: address1, line2: address2 }));
+        
+        if (!aToken || aToken.trim() === "") {
+          return toast.error("Authentication token is missing. Please log in again.");
+        }
+        
+        const { data } = await axios.post(
+          `${backendUrl}/api/admin/add-doctor`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${aToken.trim()}`, 
+            },
+          }
         );
-        console.log(response.data);
+        
+        if (data.success) {
+            toast.success(data.message);
+            setDocImg(false);
+            setName("");
+            setEmail("");
+            setPassword("");
+            setExperience("1 year");
+            setFees("");
+            setAbout("");
+            setSpeciality("General physician");
+            setDegree("");
+            setAddress1("");
+            setAddress2("");
+        } else {
+            toast.error(data.message);
+        }
     } catch (error) {
-        console.error("Error:", error.response?.data || error.message);
+      console.error("Add Doctor Error:", error.response?.data);
+      toast.error(error.response?.data?.message || "Failed to add doctor.");
     }
-    
-      if (data.success) {
-        toast.success("Doctor added successfully");
-        // Reset the form fields after submission
-        setName("");
-        setEmail("");
-        setPassword("");
-        setExperience("");
-        setFees("");
-        setAbout("");
-        setSpeciality("");
-        setDegree("");
-        setAddress1("");
-        setAddress2("");
-        setDocImg(false); 
-      } else {
-        toast.error("Failed to add doctor");
-      }
-    } catch (error) {
-      toast.error("An error occurred while adding the doctor");
-      console.error(error);
-    }
-  };
-
-  return (
+};
+ return (
     <form onSubmit={onSubmitHandler} className="m-5 w-full">
       <p className="mb-3 text-lg font-medium">Add Doctor</p>
-
+      
       <div className="bg-white px-8 py-8 border w-full max-w-4xl max-h-[80vh] overflow-y-scroll">
         <div className="flex items-center gap-4 mb-8 text-gray-500">
           <label htmlFor="doc-img">
