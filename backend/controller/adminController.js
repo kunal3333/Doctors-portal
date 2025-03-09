@@ -94,11 +94,11 @@ catch (error) {
 };
 
 
-// Api to get all docter data 
+// Api to get all docters data 
 
 const allDoctors = async (req,res) => {
   try {
-    const doctor = await doctorModel.find({}).select('-password')
+    const doctors = await doctorModel.find({}).select('-password')
     res.json({success:true,doctors})
   } catch (error) {
     console.log(error)
