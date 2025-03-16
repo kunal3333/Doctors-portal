@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useContext, useEffect, useState } from "react"; 
-import { Appcontext } from "../context/context";
+import { Appcontext } from "../context/AppContext";
 import { assets } from "../assets/assets_frontend/assets";
 import RealeatedDoctors from "../components/RealeatedDoctors";
 

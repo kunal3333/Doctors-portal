@@ -23,5 +23,7 @@ const upload = multer({
   }
 });
 
-export const uploadSingle = upload.single("docImg"); // ✅ Correct export
+// Exporting upload middleware for a single file
+export const uploadSingle = upload.single("docImg"); // field name should match the form input field name
+
 export default upload;

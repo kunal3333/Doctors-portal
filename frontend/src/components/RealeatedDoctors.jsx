@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { Appcontext } from "../context/context";
+import { Appcontext } from "../context/AppContext";
 import { useNavigate } from "react-router-dom";
 
 const RealeatedDoctors = ({ speciality, docId }) => {
