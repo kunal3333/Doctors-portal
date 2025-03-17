@@ -68,7 +68,7 @@ const AppContextProvider = ({ children }) => {
 
 
   const value = {
-    doctors,
+    doctors,getDoctorsData,
     CurrencySymbol,
     loading,
     error, 

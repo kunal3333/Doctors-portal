@@ -1,7 +1,7 @@
 const MyAppointment = () => {
   return (
-    <div>MyAppointment
-      4.10 pa hai
+    <div>
+      
     </div>
   )
 }
