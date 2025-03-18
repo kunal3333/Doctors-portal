@@ -1,9 +1,9 @@
 import { useContext, useEffect, useState } from "react";
-import { Appcontext } from "../context/AppContext";
+import { AppContext } from "../context/AppContext";
 import { useNavigate } from "react-router-dom";
 
 const RealeatedDoctors = ({ speciality, docId }) => {
-  const { doctors } = useContext(Appcontext); // Fetch doctors from context
+  const { doctors } = useContext(AppContext); // Fetch doctors from context
   const navigate = useNavigate(); // Correctly call the useNavigate hook
 
   const [relDoc, setRelDoc] = useState([]);

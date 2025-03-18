@@ -2,7 +2,7 @@ import { createContext, useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-export const Appcontext = createContext();
+export const AppContext = createContext();
 
 const AppContextProvider = ({ children }) => { 
   const CurrencySymbol = "$";
@@ -93,9 +93,9 @@ useEffect(() => {
 
 
   return (
-    <Appcontext.Provider value={value}>
+    <AppContext.Provider value={value}>
       {children}
-    </Appcontext.Provider>
+    </AppContext.Provider>
   );
 };
 

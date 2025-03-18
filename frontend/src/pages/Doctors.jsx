@@ -1,11 +1,11 @@
 import { useContext, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Appcontext } from "../context/AppContext";
+import { AppContext } from "../context/AppContext";
 
 const Doctors = () => {
   const { speciality } = useParams();
   const [filterDoc, setfilterDoc] = useState([]);
-  const { doctors } = useContext(Appcontext);
+  const { doctors } = useContext(AppContext);
   const navigate = useNavigate();
   const [showFilter,setShowFilter] = useState(false)
 

@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useContext, useEffect, useState } from "react"; 
-import { Appcontext } from "../context/AppContext";
+import { AppContext } from "../context/AppContext";
 import { assets } from "../assets/assets_frontend/assets";
 import RealeatedDoctors from "../components/RealeatedDoctors";
 import { toast } from "react-toastify";
@@ -15,7 +15,7 @@ const Appointment = () => {
     token,
     getDoctorsData,
     userData, 
-  } = useContext(Appcontext);
+  } = useContext(AppContext);
   
   const daysOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
   

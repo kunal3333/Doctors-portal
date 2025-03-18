@@ -1,10 +1,10 @@
 import { useContext, useState } from "react";
 import axios from "axios"; 
-import { Appcontext } from "../context/AppContext.jsx"; 
+import { AppContext } from "../context/AppContext.jsx"; 
 import { assets } from '../assets/assets_frontend/assets.js';
 
 const MyProfile = () => {
-  const { userData, setUserData, token, backendUrl, loadUserProfileData } = useContext(Appcontext);
+  const { userData, setUserData, token, backendUrl, loadUserProfileData } = useContext(AppContext);
   
   const [isEdit, setIsEdit] = useState(false);
   const [image, setImage] = useState(null);

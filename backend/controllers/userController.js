@@ -207,4 +207,25 @@ const bookAppointment = async (req, res) => {
 };
 
 
-export { registerUser, loginUser, getProfile, updateProfile,bookAppointment };
+//api to get user appointment for frontend my-appointment page 
+
+const listAppointment = async (req, res) => {
+  try {
+    const userId = req.userId; // Use userId from auth middleware
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID is required" });
+    }
+
+    const appointments = await appointmentModel.find({ userId });
+
+    res.json({ success: true, appointments });
+  } catch (error) {
+    console.error("Error fetching appointments:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+
+
+export { registerUser, loginUser, getProfile, updateProfile,bookAppointment ,listAppointment};
