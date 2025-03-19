@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../context/AppContext';
 import axios from 'axios';  
 import { toast } from 'react-toastify';  
+import {useNavigate } from 'react-router-dom'
 
 const MyAppointments = () => {
   const context = useContext(AppContext);
@@ -13,6 +14,8 @@ const MyAppointments = () => {
 
   const { backendUrl, token } = context;
   const [appointments, setAppointments] = useState([]);
+
+const navigate = useNavigate()
 
   const getUserAppointments = async () => {
     if (!token) {
@@ -46,12 +49,10 @@ const MyAppointments = () => {
       
       if (data.success) {
         toast.success(data.message);
-        
-        // Update the state locally instead of refetching
-        setAppointments(prevAppointments => 
-          prevAppointments.map(appt => 
-            appt._id === appointmentId ? { ...appt, canceled: true } : appt
-          )
+
+              // Remove the canceled appointment from the state
+        setAppointments(prevAppointments =>
+          prevAppointments.filter(appt => appt._id !== appointmentId)       
         );
       } else {
         toast.error(data.message);
@@ -75,6 +76,21 @@ const initpay = (order) => {
     receipt:order.receipt,
     handler: async (response) => {
       console.log(response)
+      try {
+        const { data } = await axios.post(
+          `${backendUrl}/api/user/verifyRazorpay`,response,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );   
+      if(data.success)
+      {
+        getUserAppointments()
+        navigate('/my-appointment')
+
+      }
+      } catch (error) {
+        console.log(error)
+        toast.error(error.message)
+      }
     }
   }
   const rzp = new window.Razorpay(option)
@@ -127,7 +143,8 @@ const initpay = (order) => {
               </div>
 
               <div className="flex flex-col gap-2 justify-end">
-                {!item.canceled && (
+                {!item.canceled && item.payment && <button className='sm:min-w-48 py-2 border rounded text-stone-500 bg-indigo-50'>Paid</button>}
+                {!item.canceled && !item.payment && (
                   <>
                     <button onClick={()=> appointmentRazorpay(item._id)} className="text-sm text-stone-500 text-center sm:min-w-48 py-2 border hover:bg-primary hover:text-white transition-all duration-300">
                       Pay Online

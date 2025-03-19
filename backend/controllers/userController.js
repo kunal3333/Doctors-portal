@@ -57,6 +57,7 @@ const registerUser = async (req, res) => {
   }
 };
 
+
 // Login API
 const loginUser = async (req, res) => {
   try {
@@ -76,6 +77,7 @@ const loginUser = async (req, res) => {
   }
 };
 
+
 // API to get user profile
 const getProfile = async (req, res) => {
   try {
@@ -94,6 +96,7 @@ const getProfile = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 // API to update user profile
 const updateProfile = async (req, res) => {
@@ -141,6 +144,7 @@ const updateProfile = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 // Api to book Appointment
 const bookAppointment = async (req, res) => {
@@ -225,6 +229,7 @@ const listAppointment = async (req, res) => {
   }
 };
 
+
 //Api to cancel appointment
 const cancelAppointment = async (req, res) => {
   try {
@@ -265,12 +270,10 @@ const cancelAppointment = async (req, res) => {
 
 
 // Api for paymtam gatyway razorpay
-
 const razorpayInstance = new razorpay({
   key_id:process.env.RAZORPAY_KEY_ID,
   key_secret:process.env.RAZORPAY_KEY_SECRET
 })
-
 
 const paymentRazorpay = async (req, res) => {
   try {
@@ -319,4 +322,28 @@ const paymentRazorpay = async (req, res) => {
 };
 
 
-export { registerUser, loginUser, getProfile, updateProfile,bookAppointment ,listAppointment,cancelAppointment,paymentRazorpay};
+// api to conformmpayment razorpay payments
+
+const verifyRazorpay = async (req,res) => {
+
+  try{
+const {razorpay_order_id} = req.body
+const orderInfo = await razorpayInstance.orders.fetch(razorpay_order_id)
+if (orderInfo.status === 'paid') 
+  {
+  await appointmentModel.findByIdAndUpdate(orderInfo.receipt,{payment:true})
+  res.json({success:true,message:"payment Successful"})
+}
+// else{
+//   res.json{(success:false,message:Payment failed)}
+// }
+
+  }catch(error){
+    console.log( error);
+    res.json({ success: false, message: error.message });
+  }
+}
+
+
+
+export { registerUser, loginUser, getProfile, updateProfile,bookAppointment ,listAppointment,cancelAppointment,paymentRazorpay,verifyRazorpay};
