@@ -62,6 +62,44 @@ const MyAppointments = () => {
     }
   };
 
+
+const initpay = (order) => {
+  
+  const option ={
+    key:import.meta.env.VITE_RAZORPAY_KEY_ID,
+    amount: order.amount,
+    currency: order.currency,
+    name:'Appointment Payment',
+    description:'Appointment Payment',
+    order_id: order.id,
+    receipt:order.receipt,
+    handler: async (response) => {
+      console.log(response)
+    }
+  }
+  const rzp = new window.Razorpay(option)
+  rzp.open()
+}
+  
+
+   const appointmentRazorpay = async (appointmentId) => {
+    
+    try {
+      const { data } = await axios.post(
+        `${backendUrl}/api/user/payment-razorpay`,  
+        { appointmentId }, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      if(data.success){
+        
+        initpay(data.order)   
+         }
+    } catch (error) {
+
+    }
+    
+   }
+
   useEffect(() => {
     getUserAppointments();
   }, [token]);
@@ -91,7 +129,7 @@ const MyAppointments = () => {
               <div className="flex flex-col gap-2 justify-end">
                 {!item.canceled && (
                   <>
-                    <button className="text-sm text-stone-500 text-center sm:min-w-48 py-2 border hover:bg-primary hover:text-white transition-all duration-300">
+                    <button onClick={()=> appointmentRazorpay(item._id)} className="text-sm text-stone-500 text-center sm:min-w-48 py-2 border hover:bg-primary hover:text-white transition-all duration-300">
                       Pay Online
                     </button>
                     <button 

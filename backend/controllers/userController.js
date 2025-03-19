@@ -6,7 +6,7 @@ import { v2 as cloudinary } from "cloudinary";
 import doctorModel from "../models/doctorModel.js";
 import userModel from "../models/userModel.js";
 import appointmentModel from "../models/appointmentModel.js";
-
+import razorpay from 'razorpay'
 
 // API to register user
 const registerUser = async (req, res) => {
@@ -264,4 +264,59 @@ const cancelAppointment = async (req, res) => {
 };
 
 
-export { registerUser, loginUser, getProfile, updateProfile,bookAppointment ,listAppointment,cancelAppointment};
+// Api for paymtam gatyway razorpay
+
+const razorpayInstance = new razorpay({
+  key_id:process.env.RAZORPAY_KEY_ID,
+  key_secret:process.env.RAZORPAY_KEY_SECRET
+})
+
+
+const paymentRazorpay = async (req, res) => {
+  try {
+    const { appointmentId } = req.body;
+
+    if (!appointmentId) {
+      return res.status(400).json({ success: false, message: "Appointment ID is required" });
+    }
+
+    const appointmentData = await appointmentModel.findById(appointmentId);
+
+    if (!appointmentData) {
+      return res.status(404).json({ success: false, message: "Appointment not found" });
+    }
+
+    if (appointmentData.cancelled) {
+      return res.status(400).json({ success: false, message: "This appointment has already been canceled" });
+    }
+
+    // Ensure razorpayInstance is defined
+    if (!razorpayInstance) {
+      return res.status(500).json({ success: false, message: "Razorpay instance is not initialized" });
+    }
+
+    console.log("Creating Razorpay Order with:", {
+      amount: appointmentData.amount * 100,
+      currency: process.env.CURRENCY,
+      receipt: appointmentId,
+    });
+
+    // Creating Razorpay order
+    const options = {
+      amount: appointmentData.amount * 100, // Convert to paise
+      currency: process.env.CURRENCY,
+      receipt: appointmentId,
+    };
+
+    const order = await razorpayInstance.orders.create(options);
+
+    res.json({ success: true, order });
+
+  } catch (error) {
+    console.error("Payment Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+export { registerUser, loginUser, getProfile, updateProfile,bookAppointment ,listAppointment,cancelAppointment,paymentRazorpay};
