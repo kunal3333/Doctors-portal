@@ -208,7 +208,6 @@ const bookAppointment = async (req, res) => {
 
 
 //api to get user appointment for frontend my-appointment page 
-
 const listAppointment = async (req, res) => {
   try {
     const userId = req.userId; // Use userId from auth middleware
@@ -226,6 +225,43 @@ const listAppointment = async (req, res) => {
   }
 };
 
+//Api to cancel appointment
+const cancelAppointment = async (req, res) => {
+  try {
+    const userId = req.userId; // Extracted from auth middleware
+    const { appointmentId } = req.body;
+
+    if (!appointmentId) {
+      return res.status(400).json({ success: false, message: "Appointment ID is required" });
+    }
+
+    const appointmentData = await appointmentModel.findById(appointmentId);
+    if (!appointmentData) {
+      return res.status(404).json({ success: false, message: "Appointment not found" });
+    }
+
+    // Verify if the user owns the appointment
+    if (appointmentData.userId.toString() !== userId.toString()) {
+      return res.status(403).json({ success: false, message: "Unauthorized action" });
+    }
+
+    await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true });
+
+    // Releasing doctor's slots
+    const { docId, slotDate, slotTime } = appointmentData;
+    const doctorData = await doctorModel.findById(docId);
+
+    if (doctorData && doctorData.slots_booked[slotDate]) {
+      doctorData.slots_booked[slotDate] = doctorData.slots_booked[slotDate].filter(e => e !== slotTime);
+      await doctorModel.findByIdAndUpdate(docId, { slots_booked: doctorData.slots_booked });
+    }
+
+    res.json({ success: true, message: "Appointment Cancelled" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 
 
-export { registerUser, loginUser, getProfile, updateProfile,bookAppointment ,listAppointment};
+export { registerUser, loginUser, getProfile, updateProfile,bookAppointment ,listAppointment,cancelAppointment};

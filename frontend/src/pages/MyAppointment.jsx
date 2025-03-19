@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import {AppContext} from '../context/AppContext';
+import { AppContext } from '../context/AppContext';
 import axios from 'axios';  
 import { toast } from 'react-toastify';  
 
@@ -36,6 +36,31 @@ const MyAppointments = () => {
     }
   };
   
+  const cancelAppointment = async (appointmentId) => {
+    try {
+      const { data } = await axios.post(
+        `${backendUrl}/api/user/cancel-appointment`,
+        { appointmentId }, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (data.success) {
+        toast.success(data.message);
+        
+        // Update the state locally instead of refetching
+        setAppointments(prevAppointments => 
+          prevAppointments.map(appt => 
+            appt._id === appointmentId ? { ...appt, canceled: true } : appt
+          )
+        );
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.error("Error canceling appointment:", error);
+      toast.error(error.response?.data?.message || "Failed to cancel appointment.");
+    }
+  };
 
   useEffect(() => {
     getUserAppointments();
@@ -62,13 +87,26 @@ const MyAppointments = () => {
                   {item.slotDate || "Unknown"} | {item.slotTime || "Unknown"}
                 </p>
               </div>
+
               <div className="flex flex-col gap-2 justify-end">
-                <button className="text-sm text-stone-500 text-center sm:min-w-48 py-2 border hover:bg-primary hover:text-white transition-all duration-300">
-                  Reschedule
-                </button>
-                <button className="text-sm text-stone-500 text-center sm:min-w-48 py-2 border hover:bg-red-600 hover:text-white transition-all duration-300">
-                  Cancel
-                </button>
+                {!item.canceled && (
+                  <>
+                    <button className="text-sm text-stone-500 text-center sm:min-w-48 py-2 border hover:bg-primary hover:text-white transition-all duration-300">
+                      Pay Online
+                    </button>
+                    <button 
+                      onClick={() => cancelAppointment(item._id)} 
+                      className="text-sm text-stone-500 text-center sm:min-w-48 py-2 border hover:bg-red-600 hover:text-white transition-all duration-300"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                )}
+                {item.canceled && (
+                  <button className="sm:min-w-48 py-2 border-red-500 text-red-500 bg-red-100 cursor-not-allowed">
+                    Appointment Canceled
+                  </button>
+                )}
               </div>
             </div>
           ))
