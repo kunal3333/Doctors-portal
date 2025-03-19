@@ -1,8 +1,8 @@
 import { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../context/AppContext';
-import axios from 'axios';  
-import { toast } from 'react-toastify';  
-import {useNavigate } from 'react-router-dom'
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const MyAppointments = () => {
   const context = useContext(AppContext);
@@ -14,9 +14,9 @@ const MyAppointments = () => {
 
   const { backendUrl, token } = context;
   const [appointments, setAppointments] = useState([]);
+  const navigate = useNavigate();
 
-const navigate = useNavigate()
-
+  // Fetch Appointments
   const getUserAppointments = async () => {
     if (!token) {
       toast.warn("Please log in to view appointments.");
@@ -27,7 +27,7 @@ const navigate = useNavigate()
       const { data } = await axios.post(`${backendUrl}/api/user/appointments`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
-  
+
       if (data.success) {
         setAppointments(data.appointments.reverse());
       } else {
@@ -38,7 +38,8 @@ const navigate = useNavigate()
       toast.error(error.response?.data?.message || "Failed to fetch appointments.");
     }
   };
-  
+
+  // Cancel Appointment
   const cancelAppointment = async (appointmentId) => {
     try {
       const { data } = await axios.post(
@@ -49,10 +50,10 @@ const navigate = useNavigate()
       
       if (data.success) {
         toast.success(data.message);
-
-              // Remove the canceled appointment from the state
         setAppointments(prevAppointments =>
-          prevAppointments.filter(appt => appt._id !== appointmentId)       
+          prevAppointments.map(appt => 
+            appt._id === appointmentId ? { ...appt, canceled: true } : appt
+          )
         );
       } else {
         toast.error(data.message);
@@ -63,58 +64,53 @@ const navigate = useNavigate()
     }
   };
 
-
-const initpay = (order) => {
-  
-  const option ={
-    key:import.meta.env.VITE_RAZORPAY_KEY_ID,
-    amount: order.amount,
-    currency: order.currency,
-    name:'Appointment Payment',
-    description:'Appointment Payment',
-    order_id: order.id,
-    receipt:order.receipt,
-    handler: async (response) => {
-      console.log(response)
-      try {
-        const { data } = await axios.post(
-          `${backendUrl}/api/user/verifyRazorpay`,response,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );   
-      if(data.success)
-      {
-        getUserAppointments()
-        navigate('/my-appointment')
-
+  // Initialize Razorpay Payment
+  const initPay = (order) => {
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: order.amount,
+      currency: order.currency,
+      name: 'Appointment Payment',
+      description: 'Appointment Payment',
+      order_id: order.id,
+      receipt: order.receipt,
+      handler: async (response) => {
+        console.log(response);
+        try {
+          const { data } = await axios.post(
+            `${backendUrl}/api/user/verifyRazorpay`, response,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );   
+          if (data.success) {
+            getUserAppointments();
+            navigate('/my-appointment');
+          }
+        } catch (error) {
+          console.log(error);
+          toast.error(error.message);
+        }
       }
-      } catch (error) {
-        console.log(error)
-        toast.error(error.message)
-      }
-    }
-  }
-  const rzp = new window.Razorpay(option)
-  rzp.open()
-}
-  
+    };
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  };
 
-   const appointmentRazorpay = async (appointmentId) => {
-    
+  // Handle Razorpay Payment
+  const appointmentRazorpay = async (appointmentId) => {
     try {
       const { data } = await axios.post(
         `${backendUrl}/api/user/payment-razorpay`,  
         { appointmentId }, 
         { headers: { Authorization: `Bearer ${token}` } }
-      )
-      if(data.success){
-        
-        initpay(data.order)   
-         }
+      );
+      if (data.success) {
+        initPay(data.order);
+      }
     } catch (error) {
-
+      console.error("Payment error:", error);
+      toast.error("Payment failed.");
     }
-    
-   }
+  };
 
   useEffect(() => {
     getUserAppointments();
@@ -122,14 +118,17 @@ const initpay = (order) => {
 
   return (
     <div className="container mx-auto p-4">
-      <p className="pb-3 mt-12 font-medium text-zinc-700 border-b">My appointments</p>
+      <p className="pb-3 mt-12 font-medium text-zinc-700 border-b">My Appointments</p>
       <div>
         {appointments.length > 0 ? (
           appointments.map((item, index) => (
-            <div key={index} className="grid grid-cols-[1fr_2fr] gap-4 sm:flex sm:gap-6 py-2 border-b">
+            <div key={index} className={`grid grid-cols-[1fr_2fr] gap-4 sm:flex sm:gap-6 py-2 border-b ${item.canceled ? 'opacity-50' : ''}`}>
+              {/* Doctor Image */}
               <div>
                 <img className="w-32 bg-indigo-50" src={item.docData?.image || '/default-avatar.png'} alt="Doctor" />
               </div>
+
+              {/* Appointment Details */}
               <div className="flex-1 text-sm text-zinc-600">
                 <p className="text-neutral-800 font-semibold">{item.docData?.name || "N/A"}</p>
                 <p>{item.docData?.speciality || "No Speciality"}</p>
@@ -142,21 +141,29 @@ const initpay = (order) => {
                 </p>
               </div>
 
+              {/* Action Buttons */}
               <div className="flex flex-col gap-2 justify-end">
-                {!item.canceled && item.payment && <button className='sm:min-w-48 py-2 border rounded text-stone-500 bg-indigo-50'>Paid</button>}
-                {!item.canceled && !item.payment && (
-                  <>
-                    <button onClick={()=> appointmentRazorpay(item._id)} className="text-sm text-stone-500 text-center sm:min-w-48 py-2 border hover:bg-primary hover:text-white transition-all duration-300">
-                      Pay Online
-                    </button>
-                    <button 
-                      onClick={() => cancelAppointment(item._id)} 
-                      className="text-sm text-stone-500 text-center sm:min-w-48 py-2 border hover:bg-red-600 hover:text-white transition-all duration-300"
-                    >
-                      Cancel
-                    </button>
-                  </>
+                {/* Show Paid or Pay Online */}
+                {!item.canceled && item.payment && (
+                  <button className="sm:min-w-48 py-2 border rounded text-stone-500 bg-indigo-50">Paid</button>
                 )}
+                {!item.canceled && !item.payment && (
+                  <button onClick={() => appointmentRazorpay(item._id)} className="text-sm text-stone-500 text-center sm:min-w-48 py-2 border hover:bg-primary hover:text-white transition-all duration-300">
+                    Pay Online
+                  </button>
+                )}
+
+                {/* Always Show Cancel Button */}
+                {!item.canceled && (
+                  <button 
+                    onClick={() => cancelAppointment(item._id)} 
+                    className="text-sm text-stone-500 text-center sm:min-w-48 py-2 border hover:bg-red-600 hover:text-white transition-all duration-300"
+                  >
+                    Cancel Appointment
+                  </button>
+                )}
+
+                {/* Show "Appointment Canceled" Instead of Buttons */}
                 {item.canceled && (
                   <button className="sm:min-w-48 py-2 border-red-500 text-red-500 bg-red-100 cursor-not-allowed">
                     Appointment Canceled
