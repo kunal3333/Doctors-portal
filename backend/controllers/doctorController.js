@@ -138,16 +138,16 @@ const appointmentCancel = async (req, res) => {
   }
 };
 
-// Api  to get dashboard data for doctor pannel
+// Api  to get dashboard data for doctor panel
 const doctorDashboard = async (req, res) => {
   try {
-    const docId = req.docId; // ✅ Get docId from middleware
+    const docId = req.docId; 
 
     if (!docId) {
       return res.status(401).json({ success: false, message: "Unauthorized: No doctor ID found" });
     }
 
-    console.log("Fetching Dashboard Data for Doctor ID:", docId); // ✅ Debugging
+    console.log("Fetching Dashboard Data for Doctor ID:", docId);
 
     const appointments = await appointmentModel.find({ docId });
 
@@ -164,13 +164,13 @@ const doctorDashboard = async (req, res) => {
     });
 
     const dashData = {
-      earnings, // ✅ Ensure key names match frontend expectations
+      earnings, 
       appointments: appointments.length,
       patients: patients.length,
       latestAppointments: appointments.reverse().slice(0, 5),
     };
 
-    console.log("Sending Dashboard Data:", dashData); // ✅ Debugging
+    console.log("Sending Dashboard Data:", dashData); 
 
     res.json({ success: true, dashData });
   } catch (error) {
@@ -179,6 +179,58 @@ const doctorDashboard = async (req, res) => {
   }
 };
 
+// Api to crete doctor profile for doctor panel
+const doctorProfile = async ( req,res) => {
+  try {
+    const docId = req.docId; // Get doctor ID from token
+
+    if (!docId) {
+      return res.status(401).json({ success: false, message: "Unauthorized: No doctor ID found" });
+    }
+    console.log("Fetching Profile Data for Doctor ID:", docId); 
+
+    const doctor = await doctorModel.findById(docId).select("-password");
+
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: "Doctor not found" });
+    }
+
+    res.json({ success: true, profileData: doctor });
+  } catch (error) {
+    console.error("Doctor Profile Fetch Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+//Api to update doctor profile dat from doctor panel 
+const updateDoctorProfile = async (req, res) => {
+  try {
+    const docId = req.docId; // ✅ Get doctor ID from token
+
+    if (!docId) {
+      return res.status(401).json({ success: false, message: "Unauthorized: No doctor ID found" });
+    }
+
+    const { fees, address, available } = req.body;
+
+    console.log("Updating Profile for Doctor ID:", docId); // ✅ Debugging
+
+    const updatedDoctor = await doctorModel.findByIdAndUpdate(
+      docId,
+      { fees, address, available },
+      { new: true }
+    );
+
+    if (!updatedDoctor) {
+      return res.status(404).json({ success: false, message: "Doctor not found" });
+    }
+
+    res.json({ success: true, message: "Profile updated", profileData: updatedDoctor });
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 
 
 export {
@@ -188,5 +240,8 @@ export {
   appointmentsDoctor,
   appointmentComplete,
   appointmentCancel,
-  doctorDashboard
+  doctorDashboard,
+  doctorProfile,
+  updateDoctorProfile,
+
 };

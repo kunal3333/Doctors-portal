@@ -10,8 +10,7 @@ const DoctorContextProvider = (props) => {
   const [dToken, setDToken] = useState(localStorage.getItem("dToken") || "");
   const [appointments, setAppointments] = useState([]);
   const [dashData,setDashData] = useState(false)
-
-
+  const [profileData, setProfileData] = useState(false)
   useEffect(() => {
     if (dToken) {
       getAppointments();
@@ -115,7 +114,6 @@ const DoctorContextProvider = (props) => {
     }
   };
   
-
   const cancelAppointment = async (appointmentId) => {
     try {
       if (!dToken) {
@@ -154,7 +152,6 @@ const DoctorContextProvider = (props) => {
     }
   };
   
-
   const getDashData = async () => {
     try {
       if (!dToken) {
@@ -179,11 +176,67 @@ const DoctorContextProvider = (props) => {
       toast.error("Error fetching dashboard data.");
     }
   };
+
+  const getProfileData = async ( ) => {
+    try {
+      if (!dToken) {
+        toast.error("Session expired. Please log in again.");
+        return;
+      }
+  
+      console.log("Updating Profile Data:", getProfileData); // ✅ Debugging
+  
+      const response = await axios.post(
+        `${backendUrl}/api/doctor/update-profile`,
+        getProfileData,
+        { headers: { Authorization: `Bearer ${dToken}` } }
+      );
+  
+      if (response.data.success) {
+        setProfileData(response.data.profileData); // ✅ Update profile state
+        toast.success(response.data.message);
+        return response.data;
+      } else {
+        toast.error(response.data.message || "Failed to update profile");
+      }
+    } catch (error) {
+      console.error("Profile Update Error:", error.response?.data || error);
+      toast.error("Error updating profile.");
+    }
+  };
+
+  const updateDoctorProfile = async (updateData) => {
+    try {
+      if (!dToken) {
+        toast.error("Session expired. Please log in again.");
+        return;
+      }
+  
+      console.log("Updating Profile Data:", updateData); // ✅ Debugging
+  
+      const response = await axios.post(
+        `${backendUrl}/api/doctor/update-profile`,
+        updateData,
+        { headers: { Authorization: `Bearer ${dToken}` } }
+      );
+  
+      if (response.data.success) {
+        setProfileData(response.data.profileData); // ✅ Update profile state
+        toast.success(response.data.message);
+        return response.data;
+      } else {
+        toast.error(response.data.message || "Failed to update profile");
+      }
+    } catch (error) {
+      console.error("Profile Update Error:", error.response?.data || error);
+      toast.error("Error updating profile.");
+    }
+  };
   
 
   return (
     <DoctorContext.Provider
-      value={{ dToken, setDToken, appointments, getAppointments, completeAppointment, cancelAppointment,dashData,setDashData,getDashData }}
+      value={{ dToken, setDToken, appointments, getAppointments, completeAppointment, cancelAppointment,dashData,setDashData,getDashData,profileData,setProfileData,getProfileData,updateDoctorProfile }}
     >
       {props.children}
     </DoctorContext.Provider>
